@@ -67,7 +67,9 @@ public class StringFormatter implements IFormatter {
 		nand = 0;
 		natt = 0;
 		dir = false;
-		trim = true;
+		// FIXME parcit mai Defaulteinstellung trim von true auf false gesetzt, so dass
+		// führende Leerzeichen beibehalten werden
+		trim = false;
 	}
 
 	/**

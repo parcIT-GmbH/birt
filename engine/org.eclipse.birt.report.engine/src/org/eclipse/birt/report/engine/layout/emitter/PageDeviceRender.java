@@ -798,136 +798,173 @@ public abstract class PageDeviceRender implements IAreaVisitor {
 		}
 	}
 
-	private void drawBorder(TableBorder tb) {
-		if (null == tb) {
+	private void drawBorder( TableBorder tb )
+	{
+		if ( null == tb )
 			return;
-		}
 
-		tb.findBreakPoints();
+		tb.findBreakPoints( );
 		Border border = null;
 		// draw column borders
-		for (Iterator<?> i = tb.columnBorders.keySet().iterator(); i.hasNext();) {
-			Integer pos = (Integer) i.next();
-			if (pos == tb.tableLRX) {
+		for ( Iterator i = tb.columnBorders.keySet( ).iterator( ); i.hasNext( ); )
+		{
+			Integer pos = (Integer) i.next( );
+			if ( pos == tb.tableLRX )
+			{
 				continue;
 			}
-			border = (Border) tb.columnBorders.get(pos);
-			for (int j = 0; j < border.segments.size(); j++) {
-				BorderSegment seg = (BorderSegment) border.segments.get(j);
-				Border rs = (Border) tb.rowBorders.get(seg.start);
-				Border re = (Border) tb.rowBorders.get(seg.end);
-				if (null == rs || null == re) {
+			border = (Border) tb.columnBorders.get( pos );
+			for ( int j = 0; j < border.segments.size( ); j++ )
+			{
+				BorderSegment seg = (BorderSegment) border.segments.get( j );
+				Border rs = (Border) tb.rowBorders.get( seg.start );
+				Border re = (Border) tb.rowBorders.get( seg.end );
+				if ( null == rs || null == re )
 					continue;
+				int sy = getScaledValue( rs.position + rs.width / 2 );
+				int ey = getScaledValue( re.position + re.width / 2 );
+				int x = getScaledValue( border.position + seg.width / 2 );
+				if ( border.breakPoints.contains( Integer.valueOf( seg.start ) ) )
+				{
+					sy = getScaledValue( rs.position );
 				}
-				int sy = getScaledValue(rs.position + rs.width / 2);
-				int ey = getScaledValue(re.position + re.width / 2);
-				int x = getScaledValue(border.position + seg.width / 2);
-				if (border.breakPoints.contains(Integer.valueOf(seg.start))) {
-					sy = getScaledValue(rs.position);
-				}
-				if (border.breakPoints.contains(Integer.valueOf(seg.end))) {
-					if (seg.end == tb.tableLRY) {
-						ey = getScaledValue(re.position);
-					} else {
-						ey = getScaledValue(re.position + re.width);
+				if ( border.breakPoints.contains( Integer.valueOf( seg.end ) ) )
+				{
+					if ( seg.end == tb.tableLRY )
+					{
+						ey = getScaledValue( re.position );
+					}
+					else
+					{
+						ey = getScaledValue( re.position + re.width );
 					}
 				}
-				drawBorder(new BorderInfo(currentX + x, currentY + sy, currentX + x, currentY + ey,
-						getScaledValue(seg.width), seg.color, seg.style, BorderInfo.LEFT_BORDER));
+				drawBorder( new BorderInfo( currentX + x, currentY + sy,
+						currentX + x, currentY + ey,
+						getScaledValue( seg.width ), seg.color, seg.style,
+						BorderInfo.LEFT_BORDER ) );
 			}
 		}
 		// draw right table border
-		border = (Border) tb.columnBorders.get(tb.tableLRX);
-		for (int j = 0; j < border.segments.size(); j++) {
-			BorderSegment seg = (BorderSegment) border.segments.get(j);
-			Border rs = (Border) tb.rowBorders.get(seg.start);
-			Border re = (Border) tb.rowBorders.get(seg.end);
-			if (null == rs || null == re) {
+		border = (Border) tb.columnBorders.get( tb.tableLRX );
+		for ( int j = 0; j < border.segments.size( ); j++ )
+		{
+			BorderSegment seg = (BorderSegment) border.segments.get( j );
+			Border rs = (Border) tb.rowBorders.get( seg.start );
+			Border re = (Border) tb.rowBorders.get( seg.end );
+			if ( null == rs || null == re )
 				continue;
+			int sy = getScaledValue( rs.position + rs.width / 2 );
+			int ey = getScaledValue( re.position + re.width / 2 );
+			int x = getScaledValue( border.position - seg.width / 2 );
+			if ( border.breakPoints.contains( Integer.valueOf( seg.start ) ) )
+			{
+				sy = getScaledValue( rs.position );
 			}
-			int sy = getScaledValue(rs.position + rs.width / 2);
-			int ey = getScaledValue(re.position + re.width / 2);
-			int x = getScaledValue(border.position - seg.width / 2);
-			if (border.breakPoints.contains(Integer.valueOf(seg.start))) {
-				sy = getScaledValue(rs.position);
-			}
-			if (border.breakPoints.contains(Integer.valueOf(seg.end))) {
-				if (seg.end == tb.tableLRY) {
-					ey = getScaledValue(re.position);
-				} else {
-					ey = getScaledValue(re.position + re.width);
+			if ( border.breakPoints.contains( Integer.valueOf( seg.end ) ) )
+			{
+				if ( seg.end == tb.tableLRY )
+				{
+					ey = getScaledValue( re.position );
+				}
+				else
+				{
+					ey = getScaledValue( re.position + re.width );
 				}
 			}
-			drawBorder(new BorderInfo(currentX + x, currentY + sy, currentX + x, currentY + ey,
-					getScaledValue(seg.width), seg.color, seg.style, BorderInfo.RIGHT_BORDER));
+			drawBorder( new BorderInfo( currentX + x, currentY + sy, currentX
+					+ x, currentY + ey, getScaledValue( seg.width ), seg.color,
+					seg.style, BorderInfo.RIGHT_BORDER ) );
 		}
 
 		// draw row borders
-		for (Iterator<?> i = tb.rowBorders.keySet().iterator(); i.hasNext();) {
-			Integer pos = (Integer) i.next();
-			if (pos == tb.tableLRY) {
+		for ( Iterator i = tb.rowBorders.keySet( ).iterator( ); i.hasNext( ); )
+		{
+			Integer pos = (Integer) i.next( );
+			if ( pos == tb.tableLRY )
+			{
 				continue;
 			}
 
-			border = (Border) tb.rowBorders.get(pos);
-			for (int j = 0; j < border.segments.size(); j++) {
-				BorderSegment seg = (BorderSegment) border.segments.get(j);
-				Border cs = (Border) tb.columnBorders.get(seg.start);
-				Border ce = (Border) tb.columnBorders.get(seg.end);
-				if (null == cs || null == ce) {
+			border = (Border) tb.rowBorders.get( pos );
+			for ( int j = 0; j < border.segments.size( ); j++ )
+			{
+				BorderSegment seg = (BorderSegment) border.segments.get( j );
+				Border cs = (Border) tb.columnBorders.get( seg.start );
+				Border ce = (Border) tb.columnBorders.get( seg.end );
+				if ( null == cs || null == ce )
 					continue;
-				}
 				// we can also adjust the columns in this position
-				int sx = getScaledValue(cs.position + cs.width / 2);
-				int ex = getScaledValue(ce.position + ce.width / 2);
-				int y = getScaledValue(border.position + seg.width / 2);
-				if (border.breakPoints.contains(Integer.valueOf(seg.start))) {
-					if (seg.start == tb.tableX && border.position != tb.tableY) {
-						sx = getScaledValue(cs.position + cs.width);
-					} else {
-						sx = getScaledValue(cs.position);
+				int sx = getScaledValue( cs.position + cs.width / 2 );
+				int ex = getScaledValue( ce.position + ce.width / 2 );
+				int y = getScaledValue( border.position + seg.width / 2 );
+				if ( border.breakPoints.contains( Integer.valueOf( seg.start ) ) )
+				{
+					if ( seg.start == tb.tableX && border.position != tb.tableY )
+					{
+						sx = getScaledValue( cs.position + cs.width );
+					}
+					else
+					{
+						sx = getScaledValue( cs.position );
 					}
 				}
-				if (border.breakPoints.contains(Integer.valueOf(seg.end))) {
-					if (seg.end == tb.tableLRX) {
-						if (border.position == tb.tableY) {
-							ex = getScaledValue(ce.position);
-						} else {
-							ex = getScaledValue(ce.position - ce.width);
+				if ( border.breakPoints.contains( Integer.valueOf( seg.end ) ) )
+				{
+					if ( seg.end == tb.tableLRX )
+					{
+						if ( border.position == tb.tableY )
+						{
+							ex = getScaledValue( ce.position );
 						}
-					} else {
-						ex = getScaledValue(ce.position + ce.width);
+						else
+						{
+							ex = getScaledValue( ce.position - ce.width );
+						}
+					}
+					else
+					{
+						ex = getScaledValue( ce.position + ce.width );
 					}
 				}
-				drawBorder(new BorderInfo(currentX + sx, currentY + y, currentX + ex, currentY + y,
-						getScaledValue(seg.width), seg.color, seg.style, BorderInfo.TOP_BORDER));
+				drawBorder( new BorderInfo( currentX + sx, currentY + y,
+						currentX + ex, currentY + y,
+						getScaledValue( seg.width ), seg.color, seg.style,
+						BorderInfo.TOP_BORDER ) );
 			}
 		}
 		// draw bottom table border
-		border = (Border) tb.rowBorders.get(tb.tableLRY);
-		for (int j = 0; j < border.segments.size(); j++) {
-			BorderSegment seg = (BorderSegment) border.segments.get(j);
-			Border cs = (Border) tb.columnBorders.get(seg.start);
-			Border ce = (Border) tb.columnBorders.get(seg.end);
-			if (null == cs || null == ce) {
+		border = (Border) tb.rowBorders.get( tb.tableLRY );
+		for ( int j = 0; j < border.segments.size( ); j++ )
+		{
+			BorderSegment seg = (BorderSegment) border.segments.get( j );
+			Border cs = (Border) tb.columnBorders.get( seg.start );
+			Border ce = (Border) tb.columnBorders.get( seg.end );
+			if ( null == cs || null == ce )
 				continue;
-			}
 			// we can also adjust the columns in this position
-			int sx = getScaledValue(cs.position + cs.width / 2);
-			int ex = getScaledValue(ce.position + ce.width / 2);
-			int y = getScaledValue(border.position - seg.width / 2);
-			if (border.breakPoints.contains(Integer.valueOf(seg.start))) {
-				sx = getScaledValue(cs.position);
+			int sx = getScaledValue( cs.position + cs.width / 2 );
+			int ex = getScaledValue( ce.position + ce.width / 2 );
+			// FIXME parcit mai
+			int y = getScaledValue( border.position + seg.width / 2 );
+			if ( border.breakPoints.contains( Integer.valueOf( seg.start ) ) )
+			{
+				sx = getScaledValue( cs.position );
 			}
-			if (border.breakPoints.contains(Integer.valueOf(seg.end))) {
-				if (seg.end == tb.tableLRX) {
-					ex = getScaledValue(ce.position);
-				} else {
-					ex = getScaledValue(ce.position + ce.width);
+			if ( border.breakPoints.contains( Integer.valueOf( seg.end ) ) )
+			{
+				if ( seg.end == tb.tableLRX )
+				{
+					ex = getScaledValue( ce.position );
+				}
+				else
+				{
+					ex = getScaledValue( ce.position + ce.width );
 				}
 			}
-			drawBorder(new BorderInfo(currentX + sx, currentY + y, currentX + ex, currentY + y,
-					getScaledValue(seg.width), seg.color, seg.style, BorderInfo.BOTTOM_BORDER));
+			drawBorder( new BorderInfo( currentX + sx, currentY + y, currentX
+					+ ex, currentY + y, getScaledValue( seg.width ), seg.color,
+					seg.style, BorderInfo.BOTTOM_BORDER ) );
 		}
 	}
 
