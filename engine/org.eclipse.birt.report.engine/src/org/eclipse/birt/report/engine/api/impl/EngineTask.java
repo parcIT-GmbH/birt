@@ -798,14 +798,9 @@ public abstract class EngineTask implements IEngineTask {
 
 	protected void validateStringParameter(String paramName, Object paramValue,
 			AbstractScalarParameterHandle paramHandle) throws ParameterValidationException {
-		if (paramHandle.isRequired()) // $NON-NLS-1$
-		{
-			String value = paramValue.toString().trim();
-			if (value.length() == 0) {
-				throw new ParameterValidationException(MessageConstants.PARAMETER_IS_BLANK_EXCEPTION,
-						new String[] { paramName });
-			}
-		}
+
+		// FIXME parcit mai Leerer String als Required-Parameter darf keine Exception
+		// verursachen
 	}
 
 	/*
@@ -1138,34 +1133,6 @@ public abstract class EngineTask implements IEngineTask {
 		cancelReason = reason;
 		cancel();
 	}
-
-//	public void cancel( Object signal )
-//	{
-//		if ( signal == null )
-//		{
-//			throw new IllegalArgumentException( "signal can not be null" );
-//		}
-//		cancelFlag = true;
-//		long waitingTime = 0;
-//		do
-//		{
-//			waitingTime += 100;
-//			try
-//			{
-//				Thread.sleep( 100 );
-//			}
-//			catch ( Exception ex )
-//			{
-//			}
-//			if ( runningStatus != STATUS_RUNNING )
-//			{
-//				return;
-//			}
-//		} while ( waitingTime < 5000 );
-//		disposeResourceLocator( );
-//		changeStatusToStopped();
-//		return;
-//	}
 
 	@Override
 	public boolean getCancelFlag() {

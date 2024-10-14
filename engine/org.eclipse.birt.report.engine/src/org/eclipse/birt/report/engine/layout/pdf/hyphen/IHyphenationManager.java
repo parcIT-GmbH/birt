@@ -13,13 +13,20 @@
  ***********************************************************************/
 package org.eclipse.birt.report.engine.layout.pdf.hyphen;
 
-public interface IHyphenationManager {
-	/**
-	 *
-	 * @param lang
-	 * @param country
-	 * @param word
-	 * @return
-	 */
-	Hyphenation getHyphenation(String word);
+import com.lowagie.text.pdf.BaseFont;
+
+//FIXME parcit mai
+public interface IHyphenationManager
+{
+    /**
+     *
+     * @param lang
+     * @param country
+     * @param word
+     * @return
+     */
+    public Hyphenation getHyphenation( String word);
+	public Hyphenation getHyphenation(String word, BaseFont font, float fontSize, float remainingWidth);
+	public Hyphenation getHyphenation(String word, BaseFont font, float fontSize,float remainingWidth, boolean forceHyphenation);
+	public String getHyphenSymbol();
 }

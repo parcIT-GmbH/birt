@@ -34,6 +34,10 @@ import org.eclipse.birt.report.engine.layout.area.impl.AreaFactory;
 import org.eclipse.birt.report.engine.layout.area.impl.ContainerArea;
 import org.eclipse.birt.report.engine.layout.pdf.font.FontHandler;
 import org.eclipse.birt.report.engine.layout.pdf.font.FontInfo;
+import org.eclipse.birt.report.engine.layout.pdf.hyphen.DefaultHyphenationManager;
+import org.eclipse.birt.report.engine.layout.pdf.hyphen.DummyHyphenationManager;
+import org.eclipse.birt.report.engine.layout.pdf.hyphen.Hyphenation;
+import org.eclipse.birt.report.engine.layout.pdf.hyphen.IHyphenationManager;
 import org.eclipse.birt.report.engine.layout.pdf.hyphen.IWordRecognizer;
 import org.eclipse.birt.report.engine.layout.pdf.hyphen.Word;
 import org.eclipse.birt.report.engine.layout.pdf.text.Chunk;
@@ -52,7 +56,7 @@ import com.ibm.icu.text.ArabicShapingException;
  * font, soft line break etc.
  */
 public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
-	public static boolean ENABLE_HYPHENATION = false;
+	public static boolean ENABLE_HYPHENATION = true;
 
 	private ILineStackingLayoutManager lineLM;
 
@@ -71,7 +75,7 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		splitChar.add(Character.valueOf(' '));
 		splitChar.add(Character.valueOf('\r'));
 		splitChar.add(Character.valueOf('\n'));
-	}
+	};
 
 	public PDFTextLM(PDFLayoutEngineContext context, PDFStackingLM parent, IContent content,
 			IReportItemExecutor executor) {
@@ -88,45 +92,36 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		}
 	}
 
-	@Override
 	protected boolean layoutChildren() {
-		if (null == textContent) {
+		if (null == textContent)
 			return false;
-		}
 		pause = false;
 		return comp.compose();
 	}
 
-	@Override
 	protected boolean checkAvailableSpace() {
 		return false;
 	}
 
-	@Override
 	public void addSpaceHolder(IArea con) {
 		lineLM.addArea(con, false, false);
 	}
 
-	@Override
 	public boolean needPause() {
 		return this.pause;
 	}
 
-	@Override
 	public void addTextLine(IArea textLine) {
 		lineLM.addArea(textLine, false, false);
 	}
 
-	@Override
 	public void newLine() {
-		if (lineLM.endLine()) {
+		if (lineLM.endLine())
 			pause = false;
-		} else {
+		else
 			pause = true;
-		}
 	}
 
-	@Override
 	public int getFreeSpace() {
 		return lineLM.getCurrentMaxContentWidth();
 	}
@@ -157,10 +152,10 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		boolean capitalizeNextChar = true;
 		char[] array = text.toCharArray();
 		for (int i = 0; i < array.length; i++) {
-			Character c = text.charAt(i);
-			if (splitChar.contains(c)) {
+			Character c = Character.valueOf(text.charAt(i));
+			if (splitChar.contains(c))
 				capitalizeNextChar = true;
-			} else if (capitalizeNextChar) {
+			else if (capitalizeNextChar) {
 				array[i] = Character.toUpperCase(array[i]);
 				capitalizeNextChar = false;
 			}
@@ -176,8 +171,8 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		private boolean isNew = true;
 
 		/**
-		 * if it is set to false, all the text should be displayed into one line, so
-		 * there is no need to do the wrapping.
+		 * if it is set to false, all the text should be displayed into one
+		 * line, so there is no need to do the wrapping.
 		 */
 		private boolean pdfTextWrapping;
 
@@ -185,9 +180,9 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		private int rightSpaceHolder = 0;
 
 		/**
-		 * The vestige is the word which can not be added into last line, or the remain
-		 * clip after hyphenation. vestigeIndex saves the position of the vestige
-		 * relative to the text in chunk.
+		 * The vestige is the word which can not be added into last line, or the
+		 * remain clip after hyphenation. vestigeIndex saves the position of the
+		 * vestige relative to the text in chunk.
 		 */
 		private int vestigeIndex = -1;
 		private int vestigeLength = 0;
@@ -200,7 +195,17 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 
 		private int maxLineSpace = 0;
 		private IWordRecognizer wr = null;
+		/**
+		 * FIXME parcit mai The flag to indicate whether the current TextArea needs to
+		 * be added into the line by force.
+		 */
+		private boolean addByForce = false;
 
+		/**
+		 * FIXME parcit mai The flag to indicate whether we need to split off the first
+		 * character next time.
+		 */
+		private boolean nothingSplitted = false;
 		private int leftMargin;
 		private int leftBorder;
 		private int leftPadding;
@@ -249,13 +254,13 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		}
 
 		private boolean hasMore() {
-			if (cg.hasMore()) {
+			if (cg.hasMore())
 				return true;
-			} else if (null == chunk) {
+			else if (null == chunk)
 				return false;
-			} else if (currentPos < chunk.getText().length()) {
+			else if (currentPos < chunk.getText().length())
 				return true;
-			} else {
+			else {
 				if (isInline) {
 					ContainerArea con = (ContainerArea) AreaFactory.createInlineContainer(content, false, true);
 					con.setWidth(rightBorder + rightPadding);
@@ -332,7 +337,8 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 
 			if (-1 == vestigeIndex) {
 				currentWord = wr.getNextWord();
-				// The first word of the chunk is empty, so it means this chunk is a blank one.
+				// The first word of the chunk is empty, so it means this chunk
+				// is a blank one.
 				if (null == currentWord) {
 					return;
 				}
@@ -350,7 +356,8 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 					.getWordWidth(chunk.getText().substring(currentPos, currentPos + str.length()))
 					* PDFConstants.LAYOUT_TO_PDF_RATIO) + letterSpacing * str.length() + wordSpacing;
 
-			// holds space for inline text to draw the right border, padding etc.
+			// holds space for inline text to draw the right border, padding
+			// etc.
 			if (isInline) {
 				if (isAtLast(chunk.getOffset() + currentPos + str.length())) {
 					rightSpaceHolder = rightMargin + rightBorder + rightPadding;
@@ -404,6 +411,53 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 				}
 			}
 
+			// FIXME parcit mai hyphenation
+			// Here we try to squeeze more into the rest of the line...
+			if ((str != null) && (str.length() != 0)) {
+				IHyphenationManager hm;
+				if (ENABLE_HYPHENATION) {
+					hm = new DefaultHyphenationManager(context.getLocale());
+				} else {
+					hm = new DummyHyphenationManager();
+				}
+				Hyphenation hyph = hm.getHyphenation(str, chunk.getFontInfo().getBaseFont(),
+						chunk.getFontInfo().getFontSize(),
+						(freeSpace - prevAreaWidth) / PDFConstants.LAYOUT_TO_PDF_RATIO, false);
+				if (hyph.getHyphenationPoints()[1] > 0) {
+
+					int endHyphenIndex = hyphen(0, freeSpace, hyph, chunk.getFontInfo(), hm.getHyphenSymbol());
+
+					str = hyph.getHyphenText(0, endHyphenIndex);
+					str = new String(str) + hm.getHyphenSymbol();
+
+					currentPos += str.length() - 1;
+					vestigeIndex = currentPos;
+					vestigeLength = (null == currentWord) ? vestigeLength - str.length() + 1
+							: currentWord.getLength() - str.length() + 1;
+
+					Dimension d = null;
+					if (addByForce) {
+						d = new Dimension(freeSpace,
+								(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
+						addByForce = false;
+					} else {
+						d = new Dimension(
+								prevAreaWidth + (int) (chunk.getFontInfo().getWordWidth(str)
+										* PDFConstants.LAYOUT_TO_PDF_RATIO) + letterSpacing * str.length(),
+								(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
+					}
+
+					String originalText = new String(
+							chunk.getText().substring(areaStartPos - chunk.getOffset(), vestigeIndex))
+							+ hm.getHyphenSymbol();
+
+					IArea builtArea = buildArea(getReverseText(originalText), content, chunk.getFontInfo(), d);
+					PDFTextLM.this.addTextLine(builtArea);
+					PDFTextLM.this.newLine();
+					return;
+				}
+			}
+
 			// the chunk ends, build the TextArea.
 			int length = chunk.getText().length();
 			if (currentPos == length) {
@@ -417,7 +471,94 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 				PDFTextLM.this.addTextLine(builtArea);
 				vestigeIndex = -1;
 				vestigeLength = 0;
-			} else {
+				return;
+			}
+
+			if (maxLineSpace < chunk.getFontInfo().getWordWidth(str) * PDFConstants.LAYOUT_TO_PDF_RATIO
+					+ letterSpacing * str.length() + wordSpacing) {
+				if (0 == str.length()) {
+					vestigeIndex = -1;
+					vestigeLength = 0;
+					return;
+				}
+				// does hyphenation.
+				IHyphenationManager hm;
+				if (ENABLE_HYPHENATION) {
+					hm = new DefaultHyphenationManager(context.getLocale());
+				} else {
+					hm = new DummyHyphenationManager();
+				}
+				// Hyphenation:
+				// String getHyphenationWordPre (String word, BaseFont font,
+				// float fontSize, float remainingWidth)
+				// String getHyphenationWordPost ()
+				Hyphenation hyph = hm.getHyphenation(str, chunk.getFontInfo().getBaseFont(),
+						chunk.getFontInfo().getFontSize(), maxLineSpace / PDFConstants.LAYOUT_TO_PDF_RATIO);
+
+				int endHyphenIndex = hyphen(0, freeSpace - prevAreaWidth, hyph, chunk.getFontInfo(),
+						hm.getHyphenSymbol());
+				// forces to add the first character if the hyphen index is 0
+				// for the second time.
+				if (endHyphenIndex == 0) {
+					if (nothingSplitted) {
+						str = hyph.getHyphenText(0, endHyphenIndex + 1);
+						addByForce = true;
+						nothingSplitted = false;
+					} else {
+						nothingSplitted = true;
+						vestigeIndex = currentPos;
+						vestigeLength = (null == currentWord) ? vestigeLength : currentWord.getLength();
+
+						if (0 == prevAreaWidth)
+							return;
+
+						Dimension d = new Dimension(prevAreaWidth,
+								(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
+
+						String originalText = chunk.getText().substring(areaStartPos - chunk.getOffset(), currentPos);
+
+						IArea builtArea = buildArea(getReverseText(originalText), content, chunk.getFontInfo(), d);
+						PDFTextLM.this.addTextLine(builtArea);
+						PDFTextLM.this.newLine();
+
+						return;
+					}
+				} else {
+					str = hyph.getHyphenText(0, endHyphenIndex);
+				}
+				str = new String(str) + hm.getHyphenSymbol();
+
+				// int startHyphenIndex = (null == currentWord) ? vestigeIndex :
+				// currentWord.getStart();
+				currentPos += str.length() - 1;
+				vestigeIndex = currentPos;
+				vestigeLength = (null == currentWord) ? vestigeLength - str.length() + 1
+						: currentWord.getLength() - str.length() + 1;
+
+				Dimension d = null;
+				if (addByForce) {
+					d = new Dimension(freeSpace,
+							(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
+					addByForce = false;
+				} else {
+					d = new Dimension(
+							prevAreaWidth
+									+ (int) (chunk.getFontInfo().getWordWidth(str) * PDFConstants.LAYOUT_TO_PDF_RATIO)
+									+ letterSpacing * str.length(),
+							(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
+				}
+
+				String originalText = new String(
+						chunk.getText().substring(areaStartPos - chunk.getOffset(), vestigeIndex))
+						+ hm.getHyphenSymbol();
+
+				IArea builtArea = buildArea(getReverseText(originalText), content, chunk.getFontInfo(), d);
+				PDFTextLM.this.addTextLine(builtArea);
+				PDFTextLM.this.newLine();
+				return;
+			}
+
+			else {
 				// builds the text area and ends current line.
 				Dimension d = new Dimension(prevAreaWidth,
 						(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
@@ -428,38 +569,44 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 				PDFTextLM.this.addTextLine(builtArea);
 				PDFTextLM.this.newLine();
 				if (null == currentWord) {
-					if (originalText.length() == 0) {
+					if (originalText.length() == 0)
 						return;
-					}
 					vestigeIndex = -1;
 					vestigeLength = 0;
 				} else {
 					vestigeIndex = currentWord.getStart();
 					vestigeLength = currentWord.getLength();
 				}
+				return;
 			}
 
 		}
 
 		/**
-		 * build areas by specified properties for text content. the return area should
-		 * be an container area which contains a text chunk or only a text chunk.
+		 * build areas by specified properties for text content. the return area
+		 * should be an container area which contains a text chunk or only a
+		 * text chunk.
 		 * <p>
 		 * <ul>
 		 * <li>For inline text, the return value should be a container area. The
-		 * container area inherit border and margin from text content. The position of
-		 * the container area in its container is decided by the margin value of text
-		 * content.
-		 * <li>For block text, the return value should be a text chunk. The position of
-		 * text chunk in its container is decided by the padding value of text content.
+		 * container area inherit border and margin from text content. The
+		 * position of the container area in its container is decided by the
+		 * margin value of text content.
+		 * <li>For block text, the return value should be a text chunk. The
+		 * position of text chunk in its container is decided by the padding
+		 * value of text content.
 		 * </ul>
 		 *
-		 * @param content     the TextContent which the TextArea shares the style with.
-		 * @param startOffset the start offset of the text in the TextArea relative to
-		 *                    content.
-		 * @param endOffset   the end offset of the text in the TextArea relative to
-		 *                    content.
-		 * @param fi          the FontInfo of the text in the TextArea.
+		 * @param content
+		 *            the TextContent which the TextArea shares the style with.
+		 * @param startOffset
+		 *            the start offset of the text in the TextArea relative to
+		 *            content.
+		 * @param endOffset
+		 *            the end offset of the text in the TextArea relative to
+		 *            content.
+		 * @param fi
+		 *            the FontInfo of the text in the TextArea.
 		 *
 		 * @return the built TextArea.
 		 */
@@ -473,10 +620,45 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		}
 
 		/**
-		 * Gets the reverse text if the run direction is RtL, If the run direction is
-		 * LtR, the text keeps the same.
+		 * Gets the hyphenation index
 		 *
-		 * @param text the original text.
+		 * @param startIndex
+		 *            the start index
+		 * @param width
+		 *            the width of the free space
+		 * @param hyphenation
+		 *            the hyphenation
+		 * @param fi
+		 *            the FontInfo object of the text to be hyphened.
+		 * @return the hyphenation index
+		 */
+		private int hyphen(int startIndex, int width, Hyphenation hyphenation, FontInfo fi, String hyphenSymbol) {
+			assert(startIndex >= 0);
+			if (startIndex > hyphenation.length() - 1) {
+				return -1;
+			}
+			int last = 0;
+			int current = 0;
+			for (int i = startIndex + 1; i < hyphenation.length(); i++) {
+				last = current;
+				String pre = new String(hyphenation
+						.getHyphenText(startIndex, i))
+						+ hyphenSymbol;
+				current = (int) (fi.getWordWidth(pre) * PDFConstants.LAYOUT_TO_PDF_RATIO)
+						+ letterSpacing * pre.length();
+				if (width > last && width <= current) {
+					return i - 1;
+				}
+			}
+			return hyphenation.length() - 1;
+		}
+
+		/**
+		 * Gets the reverse text if the run direction is RtL, If the run
+		 * direction is LtR, the text keeps the same.
+		 *
+		 * @param text
+		 *            the original text.
 		 * @return the reverse text.
 		 */
 		private String getReverseText(String text) {
@@ -514,11 +696,16 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		/**
 		 * create inline text area by text content
 		 *
-		 * @param content          the text content
-		 * @param text             the text string
-		 * @param contentDimension the content dimension
-		 * @param isFirst          if this area is the first area of the content
-		 * @param isLast           if this area is the last area of the content
+		 * @param content
+		 *            the text content
+		 * @param text
+		 *            the text string
+		 * @param contentDimension
+		 *            the content dimension
+		 * @param isFirst
+		 *            if this area is the first area of the content
+		 * @param isLast
+		 *            if this area is the last area of the content
 		 * @return
 		 */
 		private IArea createInlineTextArea(String text, ITextContent content, FontInfo fi, Dimension contentDimension) {
@@ -544,7 +731,6 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 	 * elements, page-break is handled by this layout manager. For block leaf
 	 * elements. page-break is handled by it's block container
 	 */
-	@Override
 	protected boolean handlePageBreakAfter() {
 		if (content != null) {
 			if (PropertyUtil.isInlineElement(content)) {
@@ -559,7 +745,6 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 	 * elements, page-break is handled by this layout manager. For block leaf
 	 * elements, page-break is handled by it's block container
 	 */
-	@Override
 	protected boolean handlePageBreakBefore() {
 		if (content != null) {
 			if (PropertyUtil.isInlineElement(content)) {

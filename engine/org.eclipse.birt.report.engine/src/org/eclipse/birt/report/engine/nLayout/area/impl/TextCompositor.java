@@ -352,20 +352,16 @@ public class TextCompositor {
 		// append the letter spacing
 		int letterSpacing = textStyle.getLetterSpacing();
 		int width = wordWidth.width + letterSpacing * textLength;
-		if (wordWidth.softHyphenWidth > 0) {
-			width = width - wordWidth.softHyphenWidth + letterSpacing;
-		}
 
-		int adjustWordSize = fontInfo.getItalicAdjust() + width;
-		if (textArea.hasSpace(adjustWordSize + wordWidth.softHyphenWidth * letterSpacing)) {
-			addWord(textArea, textLength, wordWidth);
+		if (textArea.hasSpace(width)) {
+			addWord(textArea, textLength, width);
 			wordVestige = null;
 			if (remainWords.hasWord()) {
 				// test if we can append the word spacing
 				if (textArea.hasSpace(textStyle.getWordSpacing())) {
 					textArea.addWordSpacing(textStyle.getWordSpacing());
 				} else {
-					// we have more words, but there is not enough space for
+					// we have more words, but there is no enough space for
 					// them.
 					textArea.setLineBreak(true);
 					hasLineBreak = true;
@@ -380,16 +376,28 @@ public class TextCompositor {
 				insertFirstExceedWord = false;
 			}
 			if (isNewLine && textArea.isEmpty()) {
+				// ist die Zeile leer und das wort länger als die Zeile MUSS
+				// egal wie getrennt werden, wenn Hyph enabled ist
+				// parcIT FIX
 				if (context.isEnableWordbreak()) {
-					doWordBreak(word.getValue(), textArea);
+					doWordBreak(word.getValue(), textArea, true);
 				} else {
-					// If width of a word is larger than the max line width,
-					// add it into the line directly.
-					addWord(textArea, textLength, wordWidth);
+					// If width of a word is larger than the max line width, add
+					// it into the line directly.
+					addWord(textArea, textLength, width);
 				}
 			} else {
-				wordVestige = null;
-				remainWord = word;
+
+				if (context.isEnableWordbreak()) {
+					if (!doWordBreak(word.getValue(), textArea)) {
+						wordVestige = null;
+						remainWord = word;
+					}
+
+				} else {
+					wordVestige = null;
+					remainWord = word;
+				}
 			}
 			textArea.setLineBreak(true);
 			hasLineBreak = true;
@@ -397,28 +405,92 @@ public class TextCompositor {
 		}
 	}
 
-	private void doWordBreak(String str, TextArea area) {
-		IHyphenationManager hm = new DefaultHyphenationManager();
-		Hyphenation wb = hm.getHyphenation(str);
-		FontInfo fi = area.getStyle().getFontInfo();
-		if (area.getMaxWidth() < 0) {
-			addWordVestige(area, 1, new WordWidth(fi, wb.getHyphenText(0, 1)), str.substring(1));
-			return;
-		}
-		int endHyphenIndex = hyphen(0, area.getMaxWidth() - area.getWidth(), wb, fi);
-		// current line can't even place one character. Force to add the first
-		// character into the line.
-		if (endHyphenIndex == 0 && area.getWidth() == 0) {
-			addWordVestige(area, 1, new WordWidth(fi, wb.getHyphenText(0, 1)), str.substring(1));
-		} else {
-			WordWidth wordWidth = new WordWidth(fi, wb.getHyphenText(0, endHyphenIndex));
-			// Take letter spacing into account
-			wordWidth = new WordWidth(wordWidth.width + textStyle.getLetterSpacing() * (endHyphenIndex - 1), 0);
-			addWordVestige(area, endHyphenIndex, wordWidth, str.substring(endHyphenIndex));
-		}
+	// parcIT FIX
+	private boolean doWordBreak(String str, TextArea area) {
+		return doWordBreak(str, area, false);
 	}
 
-	private void addWordVestige(TextArea area, int vestigeTextLength, WordWidth vestigeWordWidth,
+	// parcIT FIX
+	private boolean doWordBreak(String str, TextArea area, boolean forceHyphenation) {
+		IHyphenationManager hm = new DefaultHyphenationManager();
+		FontInfo fi = area.getStyle().getFontInfo();
+
+		Hyphenation hyph = hm.getHyphenation(str, fi.getBaseFont(), fi.getFontSize(),
+				area.getMaxWidth() - area.getWidth(), forceHyphenation);
+
+		if (area.getMaxWidth() < 0) {
+			addWordVestige(area, 1, WordWidth.getTextWidth(fi, hyph.getHyphenText(0, 1)),
+					str.substring(1, str.length()));
+			return true;
+		}
+		if (hyph.getHyphenationPoints()[1] > 0) {
+			int endHyphenIndex = hyphen(0, area.getMaxWidth() - area.getWidth(), hyph, fi, hm.getHyphenSymbol());
+
+			if (endHyphenIndex > 0) {
+				area.setLineEndString(hm.getHyphenSymbol());
+			}
+			// current line can't even place one character. Force to add the
+			// first
+			// character into the line.
+			if (endHyphenIndex == 0 && area.getWidth() == 0) {
+				addWordVestige(area, 1, WordWidth.getTextWidth(fi, hyph.getHyphenText(0, 1)),
+						str.substring(1, str.length()));
+			} else {
+
+				// parcIT FIX
+				int index = hyph.getHyphenationPoints()[endHyphenIndex];
+				addWordVestige(area, index, WordWidth.getTextWidth(fi, hyph.getHyphenText(0, endHyphenIndex))
+						+ textStyle.getLetterSpacing() * (index), str.substring(index, str.length())); // hier
+																										// musste
+																										// der index des
+																										// wortes hin,ab
+																										// dem
+																										// getrennt
+																										// wird,
+																										// nicht der
+																										// index
+																										// des
+																										// Hyhpenators
+
+			}
+
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Gets the hyphenation index
+	 *
+	 * @param startIndex  the start index
+	 * @param width       the width of the free space
+	 * @param hyphenation the hyphenation
+	 * @param fi          the FontInfo object of the text to be hyphened.
+	 * @return the hyphenation index
+	 */
+	// parcIT FIX
+	private int hyphen(int startIndex, int width, Hyphenation hyphenation, FontInfo fi, String hyphenSymbol) {
+		assert (startIndex >= 0);
+		if (startIndex > hyphenation.length() - 1) {
+			return -1;
+		}
+		int last = 0;
+		int current = 0;
+		for (int i = startIndex + 1; i < hyphenation.length(); i++) {
+			last = current;
+			String pre = hyphenation.getHyphenText(startIndex, i) + hyphenSymbol;
+			current = (int) (fi.getWordWidth(pre) * PDFConstants.LAYOUT_TO_PDF_RATIO)
+					+ textStyle.getLetterSpacing() * pre.length();
+			if (width > last && width <= current) {
+				return i - 1;
+			}
+		}
+		return hyphenation.length() - 1;// das wort passt bis zur letzten
+										// Trennmöglichkeit drauf
+
+	}
+
+	private void addWordVestige(TextArea area, int vestigeTextLength, int vestigeWordWidth,
 			String vestigeString) {
 		addWord(area, vestigeTextLength, vestigeWordWidth);
 		if (vestigeString.length() == 0) {
@@ -469,7 +541,7 @@ public class TextCompositor {
 		return new WordWidth(fontInfo, word.getValue());
 	}
 
-	private void addWord(TextArea textArea, int textLength, WordWidth wordWidth) {
+	private void addWord(TextArea textArea, int textLength, int wordWidth) {
 		textArea.addWord(textLength, wordWidth);
 	}
 

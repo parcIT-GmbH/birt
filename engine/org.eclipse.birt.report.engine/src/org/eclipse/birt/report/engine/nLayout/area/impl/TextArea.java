@@ -30,6 +30,9 @@ import com.ibm.icu.text.Bidi;
  */
 public class TextArea extends AbstractArea implements ITextArea {
 
+	// parcIT Fix
+	private String lineEndString = "";
+
 	protected String text;
 
 	protected String cachedText = null;
@@ -204,49 +207,18 @@ public class TextArea extends AbstractArea implements ITextArea {
 		return textLength;
 	}
 
-	/**
-	 * <p>
-	 * Get a string with the text this TextArea represents.
-	 * </p>
-	 * <p>
-	 * SOFT HYPHEN Unicode symbols inside the text are usually removed (depending on
-	 * {@link #removeSoftHyphens}), except a trailing one (depending on
-	 * {@link #keepTrailingSoftHyphen}).
-	 * </p>
-	 *
-	 * @return The unformatted text.
-	 */
 	private String calculateText() {
 		if (blankLine || text == null) {
 			return "";
 		}
-		String textResult = text.substring(offset, offset + textLength);
-		if (removeSoftHyphens) {
-			// Remove all Unicode SOFT HYPHEN symbols except a trailing one.
-			// This is possibly worth performance tuning!
-			int indxSoftHyphen = textResult.indexOf(SOFT_HYPHEN);
-			for (; indxSoftHyphen >= 0; indxSoftHyphen = textResult.indexOf(SOFT_HYPHEN)) {
-				String remaining = textResult.substring(indxSoftHyphen + 1);
-				if (lastInLine && remaining.strip().length() == 0)
-					break;
-				textResult = textResult.substring(0, indxSoftHyphen) + remaining;
-			}
-		}
-		return textResult;
+		// parcIT FIX
+		return text.substring(offset, offset + textLength) + lineEndString;
 	}
 
-	/*
-	 * Add a piece of text (character length and width).
-	 *
-	 * Until BIRT 4.13, the second argument was a scalar value. Beginning with BIRT
-	 * 4.14, the type changed to support Unicode SOFT HYPHENs.
-	 *
-	 * @since 4.14
-	 */
-	public void addWord(int textLength, WordWidth wordWidth) {
+	// parcIT FIX
+	public void addWord(int textLength, float wordWidth) {
 		this.textLength += textLength;
-		this.width += wordWidth.width;
-		this.softHyphenWidth = wordWidth.softHyphenWidth;
+		this.width += wordWidth;
 	}
 
 	public void addWordUsingMaxWidth(int textLength) {
@@ -444,4 +416,11 @@ public class TextArea extends AbstractArea implements ITextArea {
 		return lastInLine;
 	}
 
+	/**
+	 * @param hyphenSymbol
+	 */
+	public void setLineEndString(String hyphenSymbol) {
+		this.lineEndString = hyphenSymbol;
+
+	}
 }

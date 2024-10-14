@@ -14,11 +14,28 @@
 
 package org.eclipse.birt.report.engine.layout.pdf.hyphen;
 
-public class DummyHyphenationManager implements IHyphenationManager {
+import com.lowagie.text.pdf.BaseFont;
 
-	@Override
-	public Hyphenation getHyphenation(String word) {
-		return new Hyphenation(word, new int[] { 0, word.length() });
+//FIXME parcit mai
+public class DummyHyphenationManager implements IHyphenationManager
+{
+
+	public Hyphenation getHyphenation( String word )
+	{
+        return new Hyphenation(word, new int[]{0, word.length( )});
 	}
 
+	public Hyphenation getHyphenation(String word, BaseFont font,
+			float fontSize, float remainingWidth, boolean forceHyphenation) {
+		return null;
+	}
+
+	public Hyphenation getHyphenation(String word, BaseFont font,
+			float fontSize, float remainingWidth) {
+		return null;
+	}
+
+	public String getHyphenSymbol() {
+		return "";
+	}
 }
