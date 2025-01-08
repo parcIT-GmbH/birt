@@ -490,8 +490,7 @@ public class TextCompositor {
 
 	}
 
-	private void addWordVestige(TextArea area, int vestigeTextLength, int vestigeWordWidth,
-			String vestigeString) {
+	private void addWordVestige(TextArea area, int vestigeTextLength, int vestigeWordWidth, String vestigeString) {
 		addWord(area, vestigeTextLength, vestigeWordWidth);
 		if (vestigeString.length() == 0) {
 			wordVestige = null;

@@ -75,7 +75,7 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		splitChar.add(Character.valueOf(' '));
 		splitChar.add(Character.valueOf('\r'));
 		splitChar.add(Character.valueOf('\n'));
-	};
+	}
 
 	public PDFTextLM(PDFLayoutEngineContext context, PDFStackingLM parent, IContent content,
 			IReportItemExecutor executor) {
@@ -171,8 +171,8 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		private boolean isNew = true;
 
 		/**
-		 * if it is set to false, all the text should be displayed into one
-		 * line, so there is no need to do the wrapping.
+		 * if it is set to false, all the text should be displayed into one line, so
+		 * there is no need to do the wrapping.
 		 */
 		private boolean pdfTextWrapping;
 
@@ -180,9 +180,9 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		private int rightSpaceHolder = 0;
 
 		/**
-		 * The vestige is the word which can not be added into last line, or the
-		 * remain clip after hyphenation. vestigeIndex saves the position of the
-		 * vestige relative to the text in chunk.
+		 * The vestige is the word which can not be added into last line, or the remain
+		 * clip after hyphenation. vestigeIndex saves the position of the vestige
+		 * relative to the text in chunk.
 		 */
 		private int vestigeIndex = -1;
 		private int vestigeLength = 0;
@@ -441,9 +441,9 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 								(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
 						addByForce = false;
 					} else {
-						d = new Dimension(
-								prevAreaWidth + (int) (chunk.getFontInfo().getWordWidth(str)
-										* PDFConstants.LAYOUT_TO_PDF_RATIO) + letterSpacing * str.length(),
+						d = new Dimension(prevAreaWidth
+								+ (int) (chunk.getFontInfo().getWordWidth(str) * PDFConstants.LAYOUT_TO_PDF_RATIO)
+								+ letterSpacing * str.length(),
 								(int) (chunk.getFontInfo().getWordHeight() * PDFConstants.LAYOUT_TO_PDF_RATIO));
 					}
 
@@ -583,30 +583,24 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		}
 
 		/**
-		 * build areas by specified properties for text content. the return area
-		 * should be an container area which contains a text chunk or only a
-		 * text chunk.
+		 * build areas by specified properties for text content. the return area should
+		 * be an container area which contains a text chunk or only a text chunk.
 		 * <p>
 		 * <ul>
 		 * <li>For inline text, the return value should be a container area. The
-		 * container area inherit border and margin from text content. The
-		 * position of the container area in its container is decided by the
-		 * margin value of text content.
-		 * <li>For block text, the return value should be a text chunk. The
-		 * position of text chunk in its container is decided by the padding
-		 * value of text content.
+		 * container area inherit border and margin from text content. The position of
+		 * the container area in its container is decided by the margin value of text
+		 * content.
+		 * <li>For block text, the return value should be a text chunk. The position of
+		 * text chunk in its container is decided by the padding value of text content.
 		 * </ul>
 		 *
-		 * @param content
-		 *            the TextContent which the TextArea shares the style with.
-		 * @param startOffset
-		 *            the start offset of the text in the TextArea relative to
-		 *            content.
-		 * @param endOffset
-		 *            the end offset of the text in the TextArea relative to
-		 *            content.
-		 * @param fi
-		 *            the FontInfo of the text in the TextArea.
+		 * @param content     the TextContent which the TextArea shares the style with.
+		 * @param startOffset the start offset of the text in the TextArea relative to
+		 *                    content.
+		 * @param endOffset   the end offset of the text in the TextArea relative to
+		 *                    content.
+		 * @param fi          the FontInfo of the text in the TextArea.
 		 *
 		 * @return the built TextArea.
 		 */
@@ -622,18 +616,14 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		/**
 		 * Gets the hyphenation index
 		 *
-		 * @param startIndex
-		 *            the start index
-		 * @param width
-		 *            the width of the free space
-		 * @param hyphenation
-		 *            the hyphenation
-		 * @param fi
-		 *            the FontInfo object of the text to be hyphened.
+		 * @param startIndex  the start index
+		 * @param width       the width of the free space
+		 * @param hyphenation the hyphenation
+		 * @param fi          the FontInfo object of the text to be hyphened.
 		 * @return the hyphenation index
 		 */
 		private int hyphen(int startIndex, int width, Hyphenation hyphenation, FontInfo fi, String hyphenSymbol) {
-			assert(startIndex >= 0);
+			assert (startIndex >= 0);
 			if (startIndex > hyphenation.length() - 1) {
 				return -1;
 			}
@@ -641,9 +631,7 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 			int current = 0;
 			for (int i = startIndex + 1; i < hyphenation.length(); i++) {
 				last = current;
-				String pre = new String(hyphenation
-						.getHyphenText(startIndex, i))
-						+ hyphenSymbol;
+				String pre = new String(hyphenation.getHyphenText(startIndex, i)) + hyphenSymbol;
 				current = (int) (fi.getWordWidth(pre) * PDFConstants.LAYOUT_TO_PDF_RATIO)
 						+ letterSpacing * pre.length();
 				if (width > last && width <= current) {
@@ -654,11 +642,10 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		}
 
 		/**
-		 * Gets the reverse text if the run direction is RtL, If the run
-		 * direction is LtR, the text keeps the same.
+		 * Gets the reverse text if the run direction is RtL, If the run direction is
+		 * LtR, the text keeps the same.
 		 *
-		 * @param text
-		 *            the original text.
+		 * @param text the original text.
 		 * @return the reverse text.
 		 */
 		private String getReverseText(String text) {
@@ -696,16 +683,11 @@ public class PDFTextLM extends PDFLeafItemLM implements ITextLayoutManager {
 		/**
 		 * create inline text area by text content
 		 *
-		 * @param content
-		 *            the text content
-		 * @param text
-		 *            the text string
-		 * @param contentDimension
-		 *            the content dimension
-		 * @param isFirst
-		 *            if this area is the first area of the content
-		 * @param isLast
-		 *            if this area is the last area of the content
+		 * @param content          the text content
+		 * @param text             the text string
+		 * @param contentDimension the content dimension
+		 * @param isFirst          if this area is the first area of the content
+		 * @param isLast           if this area is the last area of the content
 		 * @return
 		 */
 		private IArea createInlineTextArea(String text, ITextContent content, FontInfo fi, Dimension contentDimension) {
